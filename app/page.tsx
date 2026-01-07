@@ -219,7 +219,7 @@ export default function Home() {
             Ready to Start?
           </h2>
           <Link href="/create/ai-story">
-            <Button className="bg-yellow-400 dark:bg-yellow-600 text-foreground border-4 border-foreground text-2xl font-black uppercase px-12 py-8 h-auto shadow-[12px_12px_0px_0px_#fff] hover:shadow-[16px_16px_0px_0px_#fff] hover:-translate-y-1 transition-all rounded-none">
+            <Button className="bg-yellow-400 dark:bg-yellow-600 text-foreground border-4 border-foreground text-2xl font-black uppercase px-12 py-8 h-auto shadow-[12px_12px_0px_0px_#000] hover:shadow-[16px_16px_0px_0px_#000] hover:-translate-y-1 transition-all rounded-none">
               Create Your Story
             </Button>
           </Link>
