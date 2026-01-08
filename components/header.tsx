@@ -208,7 +208,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="hidden sm:block">
+          <div className="hidden md:block">
             <WalletConnect />
           </div>
           <Button
@@ -246,7 +246,7 @@ export function Header() {
                   </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col p-4 space-y-2">
-                  <div className="mb-4 sm:hidden">
+                  <div className="mb-4 md:hidden">
                     <WalletConnect />
                   </div>
                   {navItems.map((item, index) => (
