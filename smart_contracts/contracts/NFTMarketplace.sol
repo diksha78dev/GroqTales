@@ -99,15 +99,8 @@ contract NFTMarketplace is ReentrancyGuard {
     uint256 tokenId
   ) external payable nonReentrant isListed(nftAddress, tokenId) {
     Listing memory listedItem = s_listings[nftAddress][tokenId];
-    if (msg.value < listedItem.price) {
+    if (msg.value != listedItem.price) {
       revert NFTMarketplace__PriceNotMet(nftAddress, tokenId, listedItem.price);
-    }
-    if (msg.value > listedItem.price) {
-      //refund extra money
-      (bool refundSuccess, ) = payable(msg.sender).call{
-        value: msg.value - listedItem.price
-      }('');
-      require(refundSuccess, 'Refund failed');
     }
     //We don't just send the money to the seller! -> Why?
     // 1. Reentrancy attack
