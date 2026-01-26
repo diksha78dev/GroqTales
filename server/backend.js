@@ -12,6 +12,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -62,6 +63,7 @@ app.use('/api/', limiter);
 app.use(compression());
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
@@ -80,6 +82,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/stories', require('./routes/stories'));
 app.use('/api/v1/comics', require('./routes/comics'));
 app.use('/api/v1/nft', require('./routes/nft'));
