@@ -214,7 +214,6 @@ graph TD
 
 ---
 
-```
 GroqTales/
 │
 ├── GroqTales/                # Core domain / main feature-specific logic
@@ -272,7 +271,7 @@ GroqTales/
 ├── tsconfig.json             # TypeScript configuration
 └── vercel.json               # Vercel deployment settings
 
-```
+
 
 ---
 
