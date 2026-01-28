@@ -22,9 +22,10 @@ const mockStories = Array(6).fill(null).map((_, i) => ({
 }));
 
 export default function ProfilePage({ params }: { params: { username: string } }) {
+  const user = { ...mockUser, username: params.username };
   return (
     <main className="min-h-screen bg-black text-slate-200 pb-20">
-      <ProfileHeader user={mockUser} />
+      <ProfileHeader user={user} />
       
       <div className="container mx-auto px-4">
         <ProfileStats />
