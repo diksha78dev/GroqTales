@@ -18,6 +18,9 @@ const swaggerUi = require('swagger-ui-express');
 const dotenv = require('dotenv');
 dotenv.config();
 
+const logger = require('./utils/logger');
+const requestIdMiddleware = require('./middleware/requestId');
+const loggingMiddleware = require('./middleware/logging');
 const { connectDB, closeDB } = require('./config/db');
 
 const app = express();
@@ -25,27 +28,6 @@ const PORT = process.env.PORT || 3001;
 
 // Store server reference for graceful shutdown
 let server;
-
-const options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'GroqTales Backend API',
-      version: '1.0.0',
-      description: 'API documentation for GroqTales Backend services',
-    },
-    servers: [
-      {
-        url: 'http://localhost:' + PORT + '/',
-      },
-    ],
-  },
-  apis: ['./routes/*.js','./backend.js'],
-};
-
-const swaggerSpec = swaggerJSDoc(options);
-// Swagger UI setup
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Security middleware
 app.use(
@@ -67,7 +49,7 @@ app.use(
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Request-ID'],
   })
 );
 
@@ -87,6 +69,9 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging middleware (after request parsing)
+app.use(loggingMiddleware);
 
 /**
  * @swagger
@@ -134,7 +119,7 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Global error handler:', err);
+  logger.error('Global error handler:', err);
 
   const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -146,10 +131,10 @@ app.use((err, req, res, next) => {
 
 // Graceful shutdown with database connection cleanup (Issue #166)
 const gracefulShutdown = async (signal) => {
-  console.log(`${signal} received, shutting down gracefully`);
+  logger.info(`${signal} received, shutting down gracefully`);
 
   const shutdownTimeout = setTimeout(() => {
-    console.error('Shutdown timed out, forcing exit');
+    logger.error('Shutdown timed out, forcing exit');
     process.exit(1);
   }, 10000); // 10 second timeout
 
@@ -157,14 +142,14 @@ const gracefulShutdown = async (signal) => {
     // Stop accepting new connections
     if (server) {
       await new Promise((resolve) => server.close(resolve));
-      console.log('HTTP server closed');
+      logger.info('HTTP server closed');
     }
     await closeDB();
-    console.log('Cleanup completed');
+    logger.info('Cleanup completed');
     clearTimeout(shutdownTimeout);
     process.exit(0);
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    logger.error('Error during shutdown:', error);
     clearTimeout(shutdownTimeout);
     process.exit(1);
   }
@@ -180,25 +165,26 @@ const DB_RETRY_DELAY_MS = parseInt(process.env.DB_RETRY_DELAY_MS || '2000', 10);
 connectDB(DB_MAX_RETRIES, DB_RETRY_DELAY_MS)
   .then(() => {
     server = app.listen(PORT, () => {
-      console.log(`GroqTales Backend API server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`Health check: http://localhost:${PORT}/api/health`);
+      logger.info(`GroqTales Backend API server running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Health check: http://localhost:${PORT}/api/health`);
     });
   })
   .catch((err) => {
-    console.error('Database connection failed:', err.message);
+    console.error(
+      'Database connection failed:',
+      err.message
+    );
 
     // In development, start server anyway without database
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Starting server in development mode without database...');
+      logger.warn('Starting server in development mode without database...');
       server = app.listen(PORT, () => {
-        console.log(
-          `GroqTales Backend API server running on port ${PORT} (NO DATABASE)`
-        );
+        console.log(`GroqTales Backend API server running on port ${PORT} (NO DATABASE)`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`Health check: http://localhost:${PORT}/api/health`);
       });
     } else {
       process.exit(1);
     }
-  });
+  });    
