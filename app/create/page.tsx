@@ -598,18 +598,29 @@ export default function CreateStoryPage() {
     try {
       setIsSyncingDraft(true);
       setDraftSyncError(null);
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => {
+        controller.abort();
+      }, DRAFT_SYNC_TIMEOUT_MS);
 
-      const response = await fetch(DRAFT_SYNC_ENDPOINT, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          draftKey,
-          versionId,
-          maxVersions: MAX_DRAFT_VERSIONS,
-        }),
-      });
+      const response = await (async () => {
+        try {
+          return await fetch(DRAFT_SYNC_ENDPOINT, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              draftKey,
+              versionId,
+              maxVersions: MAX_DRAFT_VERSIONS,
+            }),
+          });
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
+      })();
 
       if (!response.ok) {
         throw new Error('Failed to sync version restore');

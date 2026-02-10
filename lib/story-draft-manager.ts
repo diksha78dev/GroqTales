@@ -226,7 +226,7 @@ export function saveDraftSnapshot(params: {
       createdAt: now,
       updatedAt: normalizedSnapshot.updatedAt,
       aiMetadata: {
-        pipelineState: 'idle',
+        pipelineState: 'ready',
         suggestedEdits: [],
       },
     };
